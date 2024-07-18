@@ -1,0 +1,62 @@
+from bs4 import BeautifulSoup
+import requests
+import re
+
+search_term = input("What search_term do you want to search for?")
+
+url = f"https://www.newegg.ca/p/pl?d={search_term}&N=4131"
+# N=4131 is from search filters
+# d is from search term?
+
+page = requests.get(url).text
+
+doc = BeautifulSoup(page, "html.parser")
+
+# send a request for each page, based on how the url changes each time you go to a new page
+
+# FIND THE NUMBER OF PAGES:
+# from inspecting the "next page" icon, we see it's part of class list-tool-pagination-text...
+# ... so we do this to find the first occurrence
+page_text = doc.find(class_="list-tool-pagination-text")
+print(page_text)
+
+#output shows <span class="list-tool-pagination-text">Page<!-- --> ...
+#...  <strong>1<1!-- ---->/<!-- -->4</strong></span>
+# i.e. 1/4 is what we want
+# Step 1: Split by "/"
+split_1 = str(page_text).split("/")
+print("After split by '/':", split_1)
+# Check if there are enough elements
+if len(split_1) < 2:
+    raise ValueError("Unexpected format after split by '/'")
+# Step 2: Get the second last element
+second_last = split_1[-3]
+print("Second last element:", second_last)
+# Step 3: Split by ">"
+split_2 = second_last.split(">")
+print("After split by '>':", split_2)
+# Check if there are enough elements
+if len(split_2) < 2:
+    raise ValueError("Unexpected format after split by '>'")
+# Step 4: Get the last element and remove the last character
+page_str = split_2[-1][:-1]
+print("Extracted page string:", page_str)
+# Step 5: Convert to integer
+pages = int(page_str)
+print("Number of pages:", pages)
+
+for page in range(1, pages + 1):
+    url = f"https://www.newegg.ca/p/pl?d={search_term}&N=4131&page={page}"
+    page = requests.get(url).text
+    doc = BeautifulSoup(page, "html.parser")
+    
+    div = doc.find(class_="item-cells-wrap border-cells short-video-box items-list-view is-list")
+    items = div.find_all(text=re.compile(search_term))
+    for item in items:
+        parent = item.parent
+        print(item)
+
+# FINISH THIS SCRIPT OFF!!!
+# FINISH THIS SCRIPT OFF!!!
+# FINISH THIS SCRIPT OFF!!!
+# FINISH THIS SCRIPT OFF!!!
